@@ -49,12 +49,12 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function RootDocument({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang="en">
+		<html lang="en" suppressHydrationWarning>
 			<head>
+				<HeadContent />
 				<script
 					dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
 				></script>
-				<HeadContent />
 			</head>
 			<body className="font-sans antialiased wrap-anywhere">
 				<ClerkProvider>
@@ -62,8 +62,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 						<header>
 							<div className="frame">
 								<Navbar />
-								<Crosshair />
-								<Crosshair />
 							</div>
 						</header>
 
