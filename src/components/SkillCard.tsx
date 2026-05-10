@@ -1,3 +1,4 @@
+import { usePostHog } from "@posthog/react";
 import { Link } from "@tanstack/react-router";
 import {
 	ArrowBigUp,
@@ -8,28 +9,45 @@ import {
 	MessageSquare,
 } from "lucide-react";
 import { useState } from "react";
+import type { GetSkillsData } from "#/dataconnect-generated";
+
+type SkillCardProps = GetSkillsData["skills"][number];
 
 const SkillCard = ({
-	authorEmail,
-	category,
 	createdAt,
 	description,
 	installCommand,
 	tags,
 	title,
-}: SkillRecord) => {
+	author,
+}: SkillCardProps) => {
+	const posthog = usePostHog();
 	const [copied, setCopied] = useState(false);
+
+	const category = tags[0] || "General";
 
 	const handleCopy = async () => {
 		try {
 			await navigator.clipboard.writeText(installCommand);
 			setCopied(true);
+			posthog.capture("install_command_copied", {
+				skill_title: title,
+				skill_category: category,
+				install_command: installCommand,
+			});
 			setTimeout(() => {
 				setCopied(false);
 			}, 2000);
 		} catch (_error) {
 			setCopied(false);
 		}
+	};
+
+	const handleOpen = () => {
+		posthog.capture("skill_opened", {
+			skill_title: title,
+			skill_category: category,
+		});
 	};
 
 	return (
@@ -55,9 +73,13 @@ const SkillCard = ({
 			<div className="body">
 				<div className="meta">
 					<div className="author">
-						<img src="/logo512.png" alt="author avatar" className="avatar" />
+						<img 
+							src={author.imageUrl || "/logo512.png"}
+							alt={`${author.username} avatar`}
+							className="avatar"
+						/>
 						<div className="author-copy">
-							<p>Adrian</p>
+							<p>{author.username}</p>
 							<p>
 								{createdAt
 									? new Date(createdAt as string).toLocaleDateString()
@@ -101,12 +123,17 @@ const SkillCard = ({
 
 						<div className="comments">
 							<MessageSquare size={14} />
-							<span>{authorEmail ? 1 : 0}</span>
+							<span>{author.email ? 1 : 0}</span>
 						</div>
 					</div>
 
 					<div className="actions">
-						<Link to="/skills" className="open" title={`Open ${title}`}>
+						<Link
+							to="/skills"
+							className="open"
+							title={`Open ${title}`}
+							onClick={handleOpen}
+						>
 							<span>Open</span>
 							<ArrowUpRight size={14} />
 						</Link>
